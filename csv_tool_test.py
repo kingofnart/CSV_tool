@@ -26,7 +26,7 @@ class CSVToolTestCase(unittest.TestCase):
 
     def test_csv_tool(self):
         self.assertEqual(csv_tool.csv_tool('data/empty.csv', csv_tool.csv.excel), 0)
-        self.assertEqual(csv_tool.csv_tool('data/tmp.csv', csv_tool.csv.excel), 6)
+        self.assertEqual(csv_tool.csv_tool('data/tmp.csv', csv_tool.csv.excel), 5)
         self.assertEqual(csv_tool.csv_tool('data/bogus.csv', csv_tool.csv.excel_tab), -1)
 
 if __name__ == '__main__':

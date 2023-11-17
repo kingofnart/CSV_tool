@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import argparse, csv, sys, math
+import argparse, csv, sys
 import pandas as pd, numpy as np, matplotlib.pyplot as plt
 
-# Purpose of program is to read a csv file
-# with optional user defined dialect
+# Purpose of program is to read a csv file and do stuff with it
 
 def main():
     (file, dialect) = parse_args(sys.argv[1:])
@@ -30,7 +29,6 @@ def parse_args(input_args):
             setattr(dialect, arg, getattr(args, arg))
     return (args.file, dialect)
     
-
 def csv_tool(filename, dialect):
     fp = None
     cnt = -1 # error flag
@@ -39,7 +37,10 @@ def csv_tool(filename, dialect):
             cnt = 0
             reader = csv.reader(fp, dialect)
             # do stuff with file
-            stat_maker(filename, reader)
+            for _ in reader:
+                cnt += 1
+            if cnt > 0: # if file is not empty
+                stat_maker(filename)
     except FileNotFoundError as e:
         print("File {} not found: {}".format(filename, e))
     except IOError as e:
@@ -48,15 +49,14 @@ def csv_tool(filename, dialect):
         if fp: fp.close()
     return cnt
 
-def stat_maker(filename, reader):
-    # assuming row 1 is header
-    header = next(reader)
-    df = pd.DataFrame(list(reader), columns=header)
+def stat_maker(filename):
+    df = pd.read_csv(filename)
     # find numeric columns
     numeric_tracker=np.zeros((len(df.columns),), dtype=int)
     for i in range(len(df.columns)):
-        if np.all([j.isnumeric() for j in df.iloc[:,i]]):
+        if np.all([str(j).isnumeric() for j in df.iloc[:,i]]):
             numeric_tracker[i] = 1
+    # plot numeric columns
     fig, axs = plt.subplots(np.sum(numeric_tracker), 1, figsize=(10, 10*np.sum(numeric_tracker)))
     fig.suptitle('Field Data for {}'.format(filename.split('/')[-1]))
     for i in range(len(df.columns)):
@@ -67,10 +67,10 @@ def stat_maker(filename, reader):
             range_min = np.min(df.iloc[1:,i].astype(float))
             range_max = np.max(df.iloc[1:,i].astype(float))
             axs[i].plot(range(1,len(df)), df.iloc[1:,i])
-            axs[i].set_title(header[i])
+            axs[i].set_title(df.columns[i])
             axs[i].set_xlabel('Mean: {}\nMedian: {}\nSigma: {}\nRange: {} - {}'.format(mean, median, std, range_min, range_max))
     plt.tight_layout()
-    plt.savefig("{}_analysis.png".format(filename.split('/')[-1]))
+    plt.savefig("{}_analysis.png".format(filename.split('/')[-1].split('.')[0]))
 
 if __name__ == "__main__" : 
     main()
