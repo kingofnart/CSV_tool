@@ -25,15 +25,10 @@ jobs:
         python-version: "3.11"
     - name: Install dependencies
       run: |
+        pip install pandas
         python -m pip install --upgrade pip
-        python -m pip install pandas
-        | pip install numpy
-        | pip install matplotlib.pyplot
+        pip install numpy
+        pip install matplotlib.pyplot
     - name: Test with unittest
       run: |
         python -m unittest test/csv_tool_test.py
-        dependencies:
-        - pip:
-          - pandas
-          - numpy
-          - matplotlib
