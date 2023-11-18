@@ -32,4 +32,4 @@ jobs:
 
     - name: Test with unittest
       run: |
-        python -m unittest test/csv_tool_test.py
+        python -m unittest csv_tool_test.py
