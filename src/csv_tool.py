@@ -5,10 +5,12 @@ import pandas as pd, numpy as np, matplotlib.pyplot as plt
 # Purpose of program is to read a csv file and do stuff with it
 
 def main():
+    """Get user input, then call csv_tool."""
     (file, dialect) = parse_args(sys.argv[1:])
     csv_tool(file, dialect)
 
 def parse_args(input_args):
+    """Parse command line arguments, return tuple of file and dialect."""
     parser = argparse.ArgumentParser(description='Check for csv file format')
     parser.add_argument('file', help='input csv file to check')
     parser.add_argument('-d', '--delimiter', help='Delimiter to use')
@@ -30,6 +32,12 @@ def parse_args(input_args):
     return (args.file, dialect)
     
 def csv_tool(filename, dialect):
+    """Attempt to open file and call stat_maker, return error code.
+    
+    Return codes:
+    -1: Error opening file
+    0: File is empty
+    >=1: Number of lines in file"""
     fp = None
     cnt = -1 # error flag
     try:
@@ -50,27 +58,29 @@ def csv_tool(filename, dialect):
     return cnt
 
 def stat_maker(filename):
+    """Read csv file, save plots and stats of numeric columns in a pdf."""
     df = pd.read_csv(filename)
+    print(df.shape)
     # find numeric columns
-    numeric_tracker=np.zeros((len(df.columns),), dtype=int)
-    for i in range(len(df.columns)):
-        if np.all([str(j).isnumeric() for j in df.iloc[:,i]]):
-            numeric_tracker[i] = 1
+    col_types = df.dtypes
+    numeric_tracker = [True if i in ['int64', 'float64', 'complex128'] else False for i in col_types]
     # plot numeric columns
     fig, axs = plt.subplots(np.sum(numeric_tracker), 1, figsize=(10, 10*np.sum(numeric_tracker)))
     fig.suptitle('Field Data for {}'.format(filename.split('/')[-1]))
+    axs_cnt=0
     for i in range(len(df.columns)):
         if numeric_tracker[i]:
-            mean = round(np.sum(df.iloc[1:,i].astype(float))/len(df.iloc[1:,i]), 3)
-            median = np.median(df.iloc[1:,i].astype(float))
-            std = round(np.std(df.iloc[1:,i].astype(float)), 3)
-            range_min = np.min(df.iloc[1:,i].astype(float))
-            range_max = np.max(df.iloc[1:,i].astype(float))
-            axs[i].plot(range(1,len(df)), df.iloc[1:,i])
-            axs[i].set_title(df.columns[i])
-            axs[i].set_xlabel('Mean: {}\nMedian: {}\nSigma: {}\nRange: {} - {}'.format(mean, median, std, range_min, range_max))
+            mean = round(np.sum(df.iloc[:,i].astype(float))/len(df.iloc[1:,i]), 3)
+            median = round(np.median(df.iloc[:,i].astype(float)), 3)
+            std = round(np.std(df.iloc[:,i].astype(float)), 3)
+            range_min = round(np.min(df.iloc[:,i].astype(float)), 3)
+            range_max = round(np.max(df.iloc[:,i].astype(float)), 3)
+            axs[axs_cnt].plot(range(0,len(df)), df.iloc[:,i])
+            axs[axs_cnt].set_title(df.columns[i])
+            axs[axs_cnt].set_xlabel('Mean: {}\nMedian: {}\nSigma: {}\nRange: {} - {}'.format(mean, median, std, range_min, range_max))
+            axs_cnt+=1
     plt.tight_layout()
-    plt.savefig("{}_analysis.png".format(filename.split('/')[-1].split('.')[0]))
+    plt.savefig("{}_analysis.pdf".format(filename.split('/')[-1].split('.')[0]))
 
 if __name__ == "__main__" : 
     main()
