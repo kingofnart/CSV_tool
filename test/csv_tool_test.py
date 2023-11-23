@@ -1,7 +1,8 @@
-import unittest
+from unittest import TestCase
+from unittest import mock
 import src.csv_tool as csv_tool
 
-class CSVToolTestCase(unittest.TestCase):
+class CSVToolTestCase(TestCase):
 
     def test_parser(self):
         (f, d) = csv_tool.parse_args(['file1.csv'])
@@ -24,7 +25,9 @@ class CSVToolTestCase(unittest.TestCase):
         self.assertEqual(dct['skipinitialspace'], True)
         self.assertEqual(dct['quoting'], 'D')
 
-    def test_csv_tool(self):
+    @mock.patch('src.csv_tool.input', create=True)
+    def test_csv_tool(self, mocked_input):
+        mocked_input.side_effect = ['3']
         self.assertEqual(csv_tool.csv_tool('data/empty.csv', csv_tool.csv.excel), 0)
         self.assertEqual(csv_tool.csv_tool('data/tmp.csv', csv_tool.csv.excel), 5)
         self.assertEqual(csv_tool.csv_tool('data/bogus.csv', csv_tool.csv.excel_tab), -1)
