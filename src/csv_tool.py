@@ -48,7 +48,19 @@ def csv_tool(filename, dialect):
             for _ in reader:
                 cnt += 1
             if cnt > 0: # if file is not empty
-                stat_maker(filename)
+                # check for header
+                fp.seek(0)
+                head = csv.Sniffer().has_header(fp.read(1024))
+                df = pd.read_csv(filename, header=0 if head else None)
+                # ask user what they want to do
+                actions = input("What anaylsis would you like done? Field plots (1); SVD (2); Both (3)\n")
+                if actions == '1':
+                    stat_maker(df, filename)
+                elif actions == '2':
+                    svd(df, filename)
+                else:
+                    stat_maker(df, filename)
+                    svd(df, filename)
     except FileNotFoundError as e:
         print("File {} not found: {}".format(filename, e))
     except IOError as e:
@@ -57,16 +69,13 @@ def csv_tool(filename, dialect):
         if fp: fp.close()
     return cnt
 
-def stat_maker(filename):
+def stat_maker(df, filename):
     """Read csv file, save plots and stats of numeric columns in a pdf."""
-    df = pd.read_csv(filename)
-    print(df.shape)
     # find numeric columns
     col_types = df.dtypes
     numeric_tracker = [True if i in ['int64', 'float64', 'complex128'] else False for i in col_types]
     # plot numeric columns
     fig, axs = plt.subplots(np.sum(numeric_tracker), 1, figsize=(10, 10*np.sum(numeric_tracker)))
-    fig.suptitle('Field Data for {}'.format(filename.split('/')[-1]))
     axs_cnt=0
     for i in range(len(df.columns)):
         if numeric_tracker[i]:
@@ -77,10 +86,18 @@ def stat_maker(filename):
             range_max = round(np.max(df.iloc[:,i].astype(float)), 3)
             axs[axs_cnt].plot(range(0,len(df)), df.iloc[:,i])
             axs[axs_cnt].set_title(df.columns[i])
-            axs[axs_cnt].set_xlabel('Mean: {}\nMedian: {}\nSigma: {}\nRange: {} - {}'.format(mean, median, std, range_min, range_max))
+            x = 'x'
+            axs[axs_cnt].set_xlabel(f'$\\bar{x}$: {mean}\n$\\sigma$: {std}\n Median: {median}\nRange: [{range_min}, {range_max}]')
             axs_cnt+=1
     plt.tight_layout()
     plt.savefig("{}_analysis.pdf".format(filename.split('/')[-1].split('.')[0]))
 
+def svd(df, filename):
+    """Perform SVD on dataframe, save U, D, V^T matrices in csv files."""
+    U, D, Vt = np.linalg.svd(np.array(df))
+    np.savetxt("{}_U.csv".format(filename.split('/')[-1].split('.')[0]), U, delimiter=",")
+    np.savetxt("{}_D.csv".format(filename.split('/')[-1].split('.')[0]), D, delimiter=",")
+    np.savetxt("{}_Vt.csv".format(filename.split('/')[-1].split('.')[0]), Vt, delimiter=",")
+    
 if __name__ == "__main__" : 
     main()
