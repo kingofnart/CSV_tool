@@ -87,7 +87,8 @@ def stat_maker(df, filename):
             axs[axs_cnt].plot(range(0,len(df)), df.iloc[:,i])
             axs[axs_cnt].set_title(df.columns[i])
             x = 'x'
-            axs[axs_cnt].set_xlabel(f'$\\bar{x}$: {mean}\n$\\sigma$: {std}\n Median: {median}\nRange: [{range_min}, {range_max}]')
+            axs[axs_cnt].set_xlabel(f'Mean: {mean}\nStandard Deviation: {std}\n Median: {median}\nRange: [{range_min}, {range_max}]')
+            #f'$\\bar{x}$: {mean}\n$\\sigma$: {std}\n Median: {median}\nRange: [{range_min}, {range_max}]'
             axs_cnt+=1
     plt.tight_layout()
     plt.savefig("{}_analysis.pdf".format(filename.split('/')[-1].split('.')[0]))
